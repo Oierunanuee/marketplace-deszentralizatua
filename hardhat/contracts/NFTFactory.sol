@@ -8,7 +8,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract NFTFactory is ERC721URIStorage, Ownable {
     uint256 private _nextTokenId;
 
-    constructor() ERC721("MarketplaceProduct", "MPROD") Ownable(msg.sender) {}
+    // Konstruktorea aldatuta: initialOwner argumentuarekin
+    constructor(address initialOwner) 
+        ERC721("MarketplaceProduct", "MPROD") 
+        Ownable(initialOwner) 
+    {}
 
     function mintNFT(address to, string memory uri) public onlyOwner returns (uint256) {
         uint256 tokenId = _nextTokenId++;
