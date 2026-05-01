@@ -1,13 +1,17 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
+import { sepolia } from "wagmi/chains";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+const OWNER = "0x2dfebee0c186819005a284c158c5b13c0b8fc0c1";
 
 export default function Header() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
+  const { switchChain } = useSwitchChain();
   const pathname = usePathname();
 
   const shortAddress = address
@@ -65,6 +69,13 @@ export default function Header() {
               color: pathname === "/profile" ? "#8b5cf6" : "#4b5563",
               fontWeight: pathname === "/profile" ? 600 : 500,
             }}>Profila</Link>
+            {isConnected && address?.toLowerCase() === OWNER && (
+              <Link href="/admin" style={{
+                textDecoration: "none",
+                color: pathname === "/admin" ? "#ef4444" : "#6b7280",
+                fontWeight: pathname === "/admin" ? 600 : 500,
+              }}>Admin</Link>
+            )}
           </nav>
         </div>
 
@@ -103,7 +114,10 @@ export default function Header() {
             </div>
           ) : (
             <button
-              onClick={() => connect({ connector: connectors[0] })}
+              onClick={async () => {
+                connect({ connector: connectors[0] });
+                setTimeout(() => switchChain({ chainId: sepolia.id }), 1000);
+              }}
               style={{
                 display: "flex", alignItems: "center", gap: "12px",
                 padding: "6px 20px 6px 6px",
