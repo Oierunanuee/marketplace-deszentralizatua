@@ -5,6 +5,7 @@ import { CONTRACT_ADDRESSES, ABIS } from "@/lib/contracts";
 import { formatEther } from "viem";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useNFTMetadata } from "@/lib/useNFTMetadata";
 
 export default function ListingPage() {
   const { id } = useParams();
@@ -24,15 +25,17 @@ export default function ListingPage() {
     args: [listingId],
   });
 
-  if (!listing) return (
+  const l = listing as { id: bigint; seller: string; tokenId: bigint; price: bigint; isActive: boolean; createdAt: bigint } | undefined;
+  const tokenId = l?.tokenId;
+  const { metadata, loading: metadataLoading } = useNFTMetadata(tokenId);
+
+  if (!listing || !l) return (
     <div style={{ color: "white", textAlign: "center", padding: "60px" }}>
       Kargatzen...
     </div>
   );
 
-  const l = listing as { id: bigint; seller: string; tokenId: bigint; price: bigint; isActive: boolean; createdAt: bigint };
   const seller = l.seller;
-  const tokenId = l.tokenId;
   const price = l.price;
   const isActive = l.isActive;
 
@@ -91,27 +94,63 @@ export default function ListingPage() {
             borderRadius: "24px",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: "80px", marginBottom: "24px",
+            overflow: "hidden",
           }}>
-            🖼️
+            {metadataLoading ? (
+              <span>Kargatzen...</span>
+            ) : metadata?.image ? (
+              <img
+                src={metadata.image}
+                alt={metadata.name}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <span>🖼️</span>
+            )}
           </div>
           <div style={{ fontSize: "28px", fontWeight: 700, color: "white" }}>
-            Produktua #{id}
+            {metadata?.name || `Produktua #${id}`}
           </div>
           <div style={{ color: "rgba(255,255,255,0.8)", marginTop: "8px" }}>
-            Token #{tokenId.toString()}
+            Token #{tokenId?.toString()}
           </div>
         </div>
 
         {/* ESKUINEKO XEHETASUNAK */}
         <div style={{ flex: 1, padding: "40px" }}>
-          <div style={{ color: "#6b7280", fontSize: "14px", textTransform: "uppercase", marginBottom: "8px" }}>
-            SALMENTA PREZIOA
-          </div>
-          <div style={{ fontSize: "48px", fontWeight: 700, color: "#111827", marginBottom: "32px" }}>
-            {formatEther(price)} ETH
+          {/* IZENA */}
+          <div style={{ marginBottom: "24px" }}>
+            <div style={{ color: "#6b7280", fontSize: "14px", textTransform: "uppercase", marginBottom: "8px" }}>
+              Produktuaren izena
+            </div>
+            <div style={{ fontSize: "24px", fontWeight: 600, color: "#111827" }}>
+              {metadata?.name || `Produktua #${id}`}
+            </div>
           </div>
 
-          {/* SALTZAILEAREN INFORMAZIOA */}
+          {/* DESKRIBAPENA */}
+          {metadata?.description && (
+            <div style={{ marginBottom: "24px" }}>
+              <div style={{ color: "#6b7280", fontSize: "14px", textTransform: "uppercase", marginBottom: "8px" }}>
+                Deskribapena
+              </div>
+              <div style={{ color: "#4b5563", lineHeight: "1.5" }}>
+                {metadata.description}
+              </div>
+            </div>
+          )}
+
+          {/* PREZIOA */}
+          <div style={{ marginBottom: "24px" }}>
+            <div style={{ color: "#6b7280", fontSize: "14px", textTransform: "uppercase", marginBottom: "8px" }}>
+              SALMENTA PREZIOA
+            </div>
+            <div style={{ fontSize: "48px", fontWeight: 700, color: "#111827" }}>
+              {formatEther(price)} ETH
+            </div>
+          </div>
+
+          {/* SALTZAILEA */}
           <div style={{
             background: "#f9fafb", borderRadius: "16px",
             padding: "20px", marginBottom: "24px",
@@ -122,7 +161,7 @@ export default function ListingPage() {
             </div>
           </div>
 
-          {/* TRANSAKZIO XEHETASUNAK */}
+          {/* TRANSAKZIO LABURPENA */}
           <div style={{
             background: "#f9fafb", borderRadius: "16px",
             padding: "20px", marginBottom: "24px",

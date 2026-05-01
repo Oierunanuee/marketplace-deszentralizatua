@@ -23,9 +23,12 @@ async function main() {
   const marketplace = await viem.deployContract("MarketPlaceCore", [nftFactory.address]);
   console.log(`MarketPlaceCore helbidea: ${marketplace.address}`);
 
-  // --- LOTURAK ETA BAIMENAK ---
+  // 5. Setup
   await marketplace.write.setEscrowManager([escrowManager.address]);
   console.log("EscrowManager helbidea ezarrita.");
+
+  await marketplace.write.setDisputeResolver([disputeResolver.address]);
+  console.log("DisputeResolver helbidea ezarrita.");
 
   await escrowManager.write.transferOwnership([marketplace.address]);
   console.log("EscrowManager jabetza transferituta.");
