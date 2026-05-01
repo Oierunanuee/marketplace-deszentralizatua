@@ -72,6 +72,27 @@ export default function ListingPage() {
 
   return (
     <div>
+      {/* ATZERA BOTOIA */}
+      <button
+        onClick={() => router.back()}
+        style={{
+          background: "rgba(255,255,255,0.2)",
+          border: "none",
+          color: "white",
+          padding: "8px 16px",
+          borderRadius: "30px",
+          marginBottom: "24px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          fontSize: "14px",
+          fontWeight: 500,
+        }}
+      >
+        ← Atzera
+      </button>
+
       <div style={{
         background: "white",
         borderRadius: "32px",

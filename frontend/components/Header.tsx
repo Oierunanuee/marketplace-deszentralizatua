@@ -4,6 +4,7 @@ import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 const OWNER = "0x2dfebee0c186819005a284c158c5b13c0b8fc0c1";
 
@@ -13,10 +14,13 @@ export default function Header() {
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const shortAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : null;
+
+  const isOwner = isConnected && address?.toLowerCase() === OWNER;
 
   return (
     <header style={{
@@ -39,19 +43,20 @@ export default function Header() {
         {/* LOGO ETA NABIGAZIOA */}
         <div style={{ display: "flex", alignItems: "center" }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none" }}>
+            {/* LOGO KARRATUA */}
             <div style={{
               width: "40px", height: "40px",
-              background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-              borderRadius: "12px",
+              background: "#6B21A5",
+              borderRadius: "10px",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "white", fontWeight: "bold",
-            }}>⛓️</div>
-            <span style={{
-              fontSize: "20px", fontWeight: 700,
-              background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>NFTMarket</span>
+              transition: "transform 0.2s ease",
+            }}>
+              <span style={{ color: "white", fontWeight: 800, fontSize: "22px" }}>M</span>
+            </div>
+            {/* MINTEX IZENA */}
+            <div style={{ fontSize: "30px", fontWeight: 700, letterSpacing: "1px", color: "#1F1A2E" }}>
+              MINT<span style={{ color: "#6B21A5" }}>EX</span>
+            </div>
           </Link>
           <nav style={{ display: "flex", gap: "32px", marginLeft: "48px" }}>
             <Link href="/" style={{
@@ -64,12 +69,7 @@ export default function Header() {
               color: pathname === "/marketplace" ? "#8b5cf6" : "#4b5563",
               fontWeight: pathname === "/marketplace" ? 600 : 500,
             }}>Marketplace</Link>
-            <Link href="/profile" style={{
-              textDecoration: "none",
-              color: pathname === "/profile" ? "#8b5cf6" : "#4b5563",
-              fontWeight: pathname === "/profile" ? 600 : 500,
-            }}>Profila</Link>
-            {isConnected && address?.toLowerCase() === OWNER && (
+            {isOwner && (
               <Link href="/admin" style={{
                 textDecoration: "none",
                 color: pathname === "/admin" ? "#ef4444" : "#6b7280",
@@ -90,27 +90,101 @@ export default function Header() {
             fontWeight: 600,
             cursor: "pointer",
             textDecoration: "none",
-          }}> Argitaratu</Link>
+          }}>Argitaratu</Link>
 
           {isConnected ? (
-            <div
-              onClick={() => disconnect()}
-              style={{
-                display: "flex", alignItems: "center", gap: "12px",
-                padding: "6px 12px 6px 6px",
-                background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                borderRadius: "40px",
-                cursor: "pointer",
-                color: "white",
-              }}>
-              <div style={{
-                width: "40px", height: "40px",
-                background: "rgba(255,255,255,0.2)",
-                borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "20px",
-              }}>🦊</div>
-              <span style={{ fontSize: "14px", fontWeight: 500 }}>{shortAddress}</span>
+            <div style={{ position: "relative" }}>
+              <div
+                onClick={() => setMenuOpen(!menuOpen)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "12px",
+                  padding: "6px 12px 6px 6px",
+                  background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                  borderRadius: "40px",
+                  cursor: "pointer",
+                  color: "white",
+                }}
+              >
+                <div style={{
+                  width: "40px", height: "40px",
+                  background: "rgba(255,255,255,0.2)",
+                  borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "20px",
+                }}>🦊</div>
+                <span style={{ fontSize: "14px", fontWeight: 500 }}>{shortAddress}</span>
+                <span style={{ fontSize: "12px", marginLeft: "4px" }}>{menuOpen ? "▲" : "▼"}</span>
+              </div>
+
+              {/* MENU DESPLEGABLE */}
+              {menuOpen && (
+                <>
+                  <div
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      position: "fixed",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      zIndex: 999,
+                    }}
+                  />
+                  <div style={{
+                    position: "absolute",
+                    top: "calc(100% + 8px)",
+                    right: 0,
+                    background: "white",
+                    borderRadius: "16px",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                    overflow: "hidden",
+                    minWidth: "180px",
+                    zIndex: 1000,
+                  }}>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      style={{
+                        display: "block",
+                        padding: "12px 20px",
+                        textDecoration: "none",
+                        color: "#111827",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        borderBottom: "1px solid #f3f4f6",
+                        transition: "background 0.2s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                    >
+                      Profila
+                    </Link>
+                    <button
+                      onClick={() => {
+                        disconnect();
+                        setMenuOpen(false);
+                      }}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "12px 20px",
+                        border: "none",
+                        background: "white",
+                        color: "#ef4444",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        transition: "background 0.2s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#fef2f2")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                    >
+                      Deskonektatu
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <button
