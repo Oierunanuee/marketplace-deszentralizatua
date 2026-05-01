@@ -15,6 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="eu">
+      <head>
+        <title>MINTEX</title>
+      </head>
       <body style={{
         background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         minHeight: "100vh",

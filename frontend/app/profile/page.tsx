@@ -109,7 +109,12 @@ function ListingsTab({ address }: { address: string }) {
 }
 
 function ListingCard({ listingId }: { listingId: bigint }) {
-  const { data: listing } = useReadContract({
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+  const [loading, setLoading] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
+
+  const { data: listing, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.MarketPlaceCore,
     abi: ABIS.MarketPlaceCore,
     functionName: "getListing",
@@ -128,31 +133,68 @@ function ListingCard({ listingId }: { listingId: bigint }) {
   const { metadata } = useNFTMetadata(l?.tokenId);
 
   if (!l) return null;
+  if (cancelled) return null;
+  if (!l.isActive) return null;
+
+  async function handleCancel(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Zerrendaketa ezeztatu nahi duzu?")) return;
+    try {
+      setLoading(true);
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESSES.MarketPlaceCore,
+        abi: ABIS.MarketPlaceCore,
+        functionName: "cancelListing",
+        args: [l!.id],
+      });
+      await publicClient!.waitForTransactionReceipt({ hash });
+      setCancelled(true);
+      refetch();
+    } catch (error) {
+      const err = error as Error;
+      alert(`Errorea: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <Link href={`/listing/${l.id}`} className="block">
-      <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-        <div className="aspect-square bg-gradient-to-br from-pink-400 to-red-500 flex items-center justify-center overflow-hidden">
-          {metadata?.image ? (
-            <img src={metadata.image} alt={metadata.name} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-3xl">🖼️</span>
-          )}
-        </div>
-        <div className="p-3">
-          <div className="flex justify-between items-start mb-1">
-            <span className="text-purple-600 text-xs font-semibold">#{l.tokenId.toString()}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${l.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-              {l.isActive ? "AKTIBO" : "SALDU"}
-            </span>
+    <div className="relative">
+      <Link href={`/listing/${l.id}`} className="block">
+        <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+          <div className="aspect-square bg-gradient-to-br from-pink-400 to-red-500 flex items-center justify-center overflow-hidden">
+            {metadata?.image ? (
+              <img src={metadata.image} alt={metadata.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-3xl">🖼️</span>
+            )}
           </div>
-          <div className="font-semibold text-gray-800 text-sm truncate">
-            {metadata?.name || `Produktua #${l.id.toString()}`}
+          <div className="p-3">
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-purple-600 text-xs font-semibold">#{l.tokenId.toString()}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${l.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                {l.isActive ? "AKTIBO" : "SALDU"}
+              </span>
+            </div>
+            <div className="font-semibold text-gray-800 text-sm truncate">
+              {metadata?.name || `Produktua #${l.id.toString()}`}
+            </div>
+            <div className="text-gray-500 text-xs mt-1">{formatEther(l.price)} ETH</div>
           </div>
-          <div className="text-gray-500 text-xs mt-1">{formatEther(l.price)} ETH</div>
         </div>
-      </div>
-    </Link>
+      </Link>
+
+      {l.isActive && (
+        <button
+          onClick={handleCancel}
+          disabled={loading}
+          className="w-full mt-2 text-xs px-3 py-1.5 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 disabled:opacity-50 font-semibold"
+        >
+          {loading ? "Prozesatzen..." : "Ezeztatu"}
+        </button>
+      )}
+    </div>
   );
 }
 
