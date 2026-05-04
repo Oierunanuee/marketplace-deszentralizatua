@@ -14,7 +14,6 @@ describe("NFTFactory", async function () {
     const tokenUri = "ipfs://QmTest";
     const tokenId = 0n;
 
-    // Orain edozein kontuak mint egin dezake (ez du onlyOwner)
     await nftFactory.write.mintNFT([user.account.address, tokenUri], {
       account: user.account,
     });
@@ -46,5 +45,20 @@ describe("NFTFactory", async function () {
 
     assert.strictEqual(owner1.toLowerCase(), user1.account.address.toLowerCase());
     assert.strictEqual(owner2.toLowerCase(), user2.account.address.toLowerCase());
+  });
+
+  it("Ez du uzten token existitzen ez dena kontsultatzen", async function () {
+    const { viem } = await network.create();
+    const [deployer] = await viem.getWalletClients();
+    if (!deployer.account) throw new Error("No account");
+
+    const nftFactory = await viem.deployContract("NFTFactory", [deployer.account.address]);
+
+    await assert.rejects(
+      async () => {
+        await nftFactory.read.ownerOf([999n]);
+      },
+      /ERC721NonexistentToken/
+    );
   });
 });

@@ -49,4 +49,22 @@ describe("DisputeResolver", async function () {
     const updatedDispute = await disputeResolver.read.disputes([disputeId]);
     assert.strictEqual(updatedDispute[5], 2); // RESOLVED_FOR_SELLER
   });
+
+  it("Ez du uzten desadostasun bera bi aldiz irekitzen", async function () {
+    const { viem } = await network.create();
+    const [deployer] = await viem.getWalletClients();
+    if (!deployer.account) throw new Error("No account");
+
+    const disputeResolver = await viem.deployContract("DisputeResolver");
+
+    const orderId = 3n;
+    await disputeResolver.write.openDispute([orderId, "Arrazoia", "ipfs://QmEvidence"]);
+
+    await assert.rejects(
+      async () => {
+        await disputeResolver.write.openDispute([orderId, "Arrazoia 2", "ipfs://QmEvidence2"]);
+      },
+      /Desadostasuna dagoeneko irekita dago orden honentzat/
+    );
+  });
 });

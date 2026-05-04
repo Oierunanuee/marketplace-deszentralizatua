@@ -71,13 +71,11 @@ describe("EscrowManager", async function () {
 
     const escrowId = await escrowManager.read.orderToEscrow([orderId]);
 
-    // Desadostasuna ireki
     await escrowManager.write.openDispute([escrowId], { account: deployer.account });
 
     const disputedEscrow = await escrowManager.read.escrows([escrowId]);
     assert.strictEqual(disputedEscrow[5], 3); // DISPUTED
 
-    // DISPUTED egoeratik dirua askatu
     await escrowManager.write.releaseFunds([escrowId], { account: deployer.account });
 
     const releasedEscrow = await escrowManager.read.escrows([escrowId]);
@@ -101,13 +99,54 @@ describe("EscrowManager", async function () {
 
     const escrowId = await escrowManager.read.orderToEscrow([orderId]);
 
-    // Desadostasuna ireki
     await escrowManager.write.openDispute([escrowId], { account: deployer.account });
 
-    // DISPUTED egoeratik dirua itzuli
     await escrowManager.write.refundBuyer([escrowId], { account: deployer.account });
 
     const refundedEscrow = await escrowManager.read.escrows([escrowId]);
     assert.strictEqual(refundedEscrow[5], 2); // REFUNDED
+  });
+
+  it("Ez du uzten escrow bat sortzen 0 ETH-rekin", async function () {
+    const { viem } = await network.create();
+    const [deployer, buyer, seller] = await viem.getWalletClients();
+    if (!deployer.account || !buyer.account || !seller.account) throw new Error("No account");
+
+    const escrowManager = await viem.deployContract("EscrowManager");
+
+    await assert.rejects(
+      async () => {
+        await escrowManager.write.createEscrow(
+          [1n, seller.account!.address, buyer.account!.address],
+          { value: 0n, account: deployer.account! }
+        );
+      },
+      /Zenbatekoa zero baino handiagoa izan behar da/
+    );
+  });
+
+  it("Ez du uzten onlyOwner funtzioak baimenik gabe deitzerakoan", async function () {
+    const { viem } = await network.create();
+    const [deployer, buyer, seller] = await viem.getWalletClients();
+    if (!deployer.account || !buyer.account || !seller.account) throw new Error("No account");
+
+    const escrowManager = await viem.deployContract("EscrowManager");
+
+    await escrowManager.write.createEscrow(
+      [1n, seller.account.address, buyer.account.address],
+      { value: parseEther("1"), account: deployer.account }
+    );
+
+    const escrowId = await escrowManager.read.orderToEscrow([1n]);
+
+    await assert.rejects(
+      async () => {
+        await escrowManager.write.releaseFunds(
+          [escrowId],
+          { account: buyer.account! }
+        );
+      },
+      /OwnableUnauthorizedAccount/
+    );
   });
 });

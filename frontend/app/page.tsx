@@ -14,7 +14,7 @@ export default function Home() {
         marginBottom: "48px",
       }}>
         <h1 style={{ fontSize: "56px", marginBottom: "24px" }}>
-          Deskubritu, erosu eta saldu produktu bakarrak
+          Deskubritu, erosi eta saldu produktu bakarrak
         </h1>
         <p style={{ fontSize: "20px", marginBottom: "32px", opacity: 0.9 }}>
           Web3 merkatua deszentralizatuena. Konektatu zure wallet-a eta hasi saltzen.
